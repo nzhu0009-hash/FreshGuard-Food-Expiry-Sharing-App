@@ -30,6 +30,8 @@ private enum class BottomDestination(
     STATS("stats", "Stats", Icons.Filled.BarChart),
 }
 
+private const val PROFILE_ROUTE = "profile"
+
 @Composable
 fun MainScreen(
     onLogoutClick: () -> Unit,
@@ -37,30 +39,33 @@ fun MainScreen(
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val showBottomBar = BottomDestination.entries.any { it.route == currentRoute }
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                BottomDestination.entries.forEach { destination ->
-                    NavigationBarItem(
-                        selected = currentRoute == destination.route,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (showBottomBar) {
+                NavigationBar {
+                    BottomDestination.entries.forEach { destination ->
+                        NavigationBarItem(
+                            selected = currentRoute == destination.route,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = destination.icon,
-                                contentDescription = destination.label
-                            )
-                        },
-                        label = { Text(destination.label) }
-                    )
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = destination.icon,
+                                    contentDescription = destination.label
+                                )
+                            },
+                            label = { Text(destination.label) }
+                        )
+                    }
                 }
             }
         }
@@ -71,37 +76,53 @@ fun MainScreen(
             modifier = Modifier
         ) {
             composable(BottomDestination.HOME.route) {
-                PlaceholderScreen(
-                    title = "Home",
-                    subtitle = "Food list screen placeholder for Member 2.",
-                    accent = "Upcoming Expiry",
-                    topPadding = innerPadding
+                HomeEntryScreen(
+                    topPadding = innerPadding,
+                    onOpenProfile = {
+                        navController.navigate(PROFILE_ROUTE)
+                    }
                 )
             }
             composable(BottomDestination.ADD_FOOD.route) {
-                PlaceholderScreen(
+                ModulePlaceholderScreen(
+                    topPadding = innerPadding,
                     title = "Add Food",
-                    subtitle = "Add or edit food item placeholder.",
-                    accent = "Room + DatePicker",
-                    topPadding = innerPadding
+                    owner = "Member 2",
+                    description = "CRUD form and Room database flow will be connected here."
                 )
             }
             composable(BottomDestination.SHARE.route) {
-                PlaceholderScreen(
+                ModulePlaceholderScreen(
+                    topPadding = innerPadding,
                     title = "Share",
-                    subtitle = "Food sharing feature placeholder for Member 4.",
-                    accent = "Firebase Sharing",
-                    topPadding = innerPadding
+                    owner = "Member 4",
+                    description = "Firebase food sharing and community listings will be added here."
                 )
             }
             composable(BottomDestination.STATS.route) {
-                PlaceholderScreen(
-                    title = "Stats",
-                    subtitle = "Waste statistics and charts placeholder.",
-                    accent = "Visual Analytics",
+                ModulePlaceholderScreen(
                     topPadding = innerPadding,
-                    actionText = "Log out",
-                    onActionClick = onLogoutClick
+                    title = "Stats",
+                    owner = "Member 4",
+                    description = "Waste analytics and charts will be implemented in this screen."
+                )
+            }
+            composable(PROFILE_ROUTE) {
+                ProfileScreen(
+                    onBackHome = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToRoute = { route ->
+                        if (route == PROFILE_ROUTE) return@ProfileScreen
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onLogoutClick = onLogoutClick
                 )
             }
         }

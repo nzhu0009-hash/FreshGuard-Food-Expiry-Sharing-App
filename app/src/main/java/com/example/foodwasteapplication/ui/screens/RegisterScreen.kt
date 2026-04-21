@@ -5,17 +5,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -34,18 +33,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
 ) {
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -126,37 +125,47 @@ fun RegisterScreen(
             )
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
-        AuthIllustration(
-            title = "Create Account",
-            subtitle = "Start building a smarter food routine with reminders and shared tracking.",
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopStart)
-        )
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .offset(y = (-6).dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
-            Column(
+            AuthIllustration(
+                title = "Create Account",
+                subtitle = "Start building a smarter food routine with reminders and shared tracking.",
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(24.dp)
+                    .fillMaxWidth()
+                    .widthIn(max = 520.dp)
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 520.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(
-                    modifier = Modifier
+                    modifier = Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Text(
-                        text = "Join FreshGuard",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "Join FreshGuard",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Text(
+                            text = "Create your prototype account to explore reminders, sharing and waste analytics.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                     OutlinedTextField(
                         value = name,
                         onValueChange = {
@@ -173,7 +182,7 @@ fun RegisterScreen(
                             }
                         }
                     )
-                    Spacer(modifier = Modifier.height(14.dp))
+
                     OutlinedTextField(
                         value = email,
                         onValueChange = {
@@ -191,7 +200,7 @@ fun RegisterScreen(
                             }
                         }
                     )
-                    Spacer(modifier = Modifier.height(14.dp))
+
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
@@ -239,7 +248,7 @@ fun RegisterScreen(
                             )
                         }
                     )
-                    Spacer(modifier = Modifier.height(14.dp))
+
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = {
@@ -278,7 +287,7 @@ fun RegisterScreen(
                             }
                         }
                     )
-                    Spacer(modifier = Modifier.height(22.dp))
+
                     Button(
                         onClick = {
                             if (validate()) {
@@ -291,7 +300,7 @@ fun RegisterScreen(
                     ) {
                         Text("Register")
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+
                     TextButton(
                         onClick = onNavigateToLogin,
                         modifier = Modifier.fillMaxWidth()
