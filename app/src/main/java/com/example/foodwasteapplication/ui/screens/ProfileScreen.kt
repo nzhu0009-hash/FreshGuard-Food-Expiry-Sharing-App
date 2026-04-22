@@ -12,19 +12,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.StarBorder
@@ -39,14 +39,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,6 +74,18 @@ fun ProfileScreen(
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var hasPhoto by rememberSaveable { mutableStateOf(false) }
+    var publicPreview by rememberSaveable { mutableStateOf(false) }
+    var whatsappVerified by rememberSaveable { mutableStateOf(false) }
+    var mobileVerified by rememberSaveable { mutableStateOf(false) }
+    var editMode by rememberSaveable { mutableStateOf(false) }
+    var aboutText by rememberSaveable {
+        mutableStateOf("I love reducing food waste and helping others share extra groceries before they expire.")
+    }
+    val likes = remember { mutableStateListOf("Eco cooking", "Meal prep") }
+    var likeIndex by rememberSaveable { mutableIntStateOf(0) }
+    val likeSuggestions = listOf("Campus swap", "Compost tips", "Zero waste", "Community fridge")
 
     val drawerItems = listOf(
         DrawerEntry("Home", "home", Icons.Filled.Home),
@@ -165,6 +187,9 @@ fun ProfileScreen(
         }
     ) {
         Scaffold(
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            },
             topBar = {
                 TopAppBar(
                     title = {
@@ -206,8 +231,17 @@ fun ProfileScreen(
             ) {
                 FreshGuardAvatar(modifier = Modifier.size(126.dp))
 
-                TextButton(onClick = {}) {
-                    Text("Add a profile photo")
+                TextButton(
+                    onClick = {
+                        hasPhoto = !hasPhoto
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                if (hasPhoto) "Profile photo added" else "Profile photo removed"
+                            )
+                        }
+                    }
+                ) {
+                    Text(if (hasPhoto) "Change profile photo" else "Add a profile photo")
                 }
 
                 Card(
@@ -233,51 +267,129 @@ fun ProfileScreen(
                         Color(0xFF4D1E80)
                     )
                 ) {
-                    Box(
-                        modifier = Modifier.padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center
+                    TextButton(
+                        onClick = {
+                            publicPreview = !publicPreview
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (publicPreview) "Hide public profile" else "View public profile",
+                                color = Color(0xFF4D1E80),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
+                }
+
+                if (publicPreview) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Public preview",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = "nina • Food Waste Hero",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = aboutText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                InfoLine(
+                    if (whatsappVerified || mobileVerified) {
+                        "Account responsiveness will improve once activity data is collected."
+                    } else {
+                        "Responsiveness data not yet available"
+                    }
+                )
+
+                ProfileSection(title = "Verifications") {
+                    VerificationRow(
+                        label = "WhatsApp",
+                        verified = whatsappVerified,
+                        onClick = {
+                            whatsappVerified = !whatsappVerified
+                        }
+                    )
+                    VerificationRow(
+                        label = "Mobile",
+                        verified = mobileVerified,
+                        onClick = {
+                            mobileVerified = !mobileVerified
+                        }
+                    )
+                }
+
+                ProfileSection(title = "About you") {
+                    if (editMode) {
+                        OutlinedTextField(
+                            value = aboutText,
+                            onValueChange = { aboutText = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3
+                        )
+                    } else {
                         Text(
-                            text = "View public profile",
-                            color = Color(0xFF4D1E80),
-                            style = MaterialTheme.typography.labelLarge
+                            text = aboutText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                InfoLine("Responsiveness data not yet available")
-
-                ProfileSection(title = "Verifications") {
-                    VerificationRow("WhatsApp", "Verify")
-                    VerificationRow("Mobile", "Verify")
-                }
-
-                ProfileSection(title = "About you") {
-                    Text(
-                        text = "I love reducing food waste and helping others share extra groceries before they expire.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
                 ProfileSection(title = "Likes") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Rockets or butterflies",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .background(Color(0xFF4D1E80), CircleShape),
-                            contentAlignment = Alignment.Center
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        likes.forEach { like ->
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = MaterialTheme.colorScheme.background
+                            ) {
+                                Text(
+                                    text = like,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "+", color = Color.White)
+                            Text(
+                                text = "Add interest",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            TextButton(
+                                onClick = {
+                                    val next = likeSuggestions[likeIndex % likeSuggestions.size]
+                                    likeIndex += 1
+                                    if (!likes.contains(next)) likes.add(next)
+                                }
+                            ) {
+                                Text("+ Add")
+                            }
                         }
                     }
                 }
@@ -287,15 +399,27 @@ fun ProfileScreen(
                     shape = RoundedCornerShape(999.dp),
                     color = Color(0xFF4D1E80)
                 ) {
-                    Box(
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
+                    TextButton(
+                        onClick = {
+                            editMode = !editMode
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    if (!editMode) "Profile updated" else "Edit mode enabled"
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Update your profile",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.White
-                        )
+                        Box(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (editMode) "Save profile" else "Update your profile",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -341,7 +465,8 @@ private fun ProfileSection(
 @Composable
 private fun VerificationRow(
     label: String,
-    action: String,
+    verified: Boolean,
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -363,11 +488,13 @@ private fun VerificationRow(
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyLarge
         )
-        Text(
-            text = action,
-            color = Color(0xFF4D1E80),
-            style = MaterialTheme.typography.labelLarge
-        )
+        TextButton(onClick = onClick) {
+            Text(
+                text = if (verified) "Verified" else "Verify",
+                color = Color(0xFF4D1E80),
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
     }
 }
 

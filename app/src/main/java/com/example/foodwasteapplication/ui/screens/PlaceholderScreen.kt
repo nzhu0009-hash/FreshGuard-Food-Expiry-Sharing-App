@@ -65,7 +65,7 @@ fun HomeEntryScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Authentication and navigation prototype for the team project.",
+                        text = "Manage your account and move across app sections from here.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -94,12 +94,12 @@ fun HomeEntryScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Profile and navigation entry",
+                            text = "Profile setup",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Open the profile page to preview account info, drawer navigation and user details.",
+                            text = "Open your profile to edit details, verify contact methods and access the menu drawer.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -123,13 +123,13 @@ fun HomeEntryScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "Member 1 scope",
+                        text = "What is ready",
                         style = MaterialTheme.typography.titleLarge
                     )
-                    ScopeRow("Login and register flow in Jetpack Compose")
-                    ScopeRow("Navigation shell with bottom bar and screen routing")
-                    ScopeRow("User profile page and menu-based navigation")
-                    ScopeRow("Reusable layout structure for teammates to plug into")
+                    ScopeRow("Login and register flow")
+                    ScopeRow("Bottom bar navigation")
+                    ScopeRow("Profile page with drawer menu")
+                    ScopeRow("Screen routing for team integration")
                 }
             }
 
@@ -143,13 +143,13 @@ fun HomeEntryScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "Navigation preview",
+                        text = "Team handoff",
                         style = MaterialTheme.typography.titleLarge
                     )
-                    NavigationHintCard("Home", "Landing page and profile shortcut")
-                    NavigationHintCard("Add Food", "Reserved for Member 2 CRUD implementation")
-                    NavigationHintCard("Share", "Reserved for Member 4 Firebase sharing flow")
-                    NavigationHintCard("Stats", "Reserved for Member 4 analytics and charts")
+                    NavigationHintCard("Home", "User entry and profile shortcut")
+                    NavigationHintCard("Add Food", "Member 2 will connect CRUD and Room here")
+                    NavigationHintCard("Share", "Member 4 will connect Firebase sharing here")
+                    NavigationHintCard("Stats", "Member 4 will connect charts and analytics here")
                 }
             }
         }
