@@ -40,10 +40,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.foodwasteapplication.auth.MockAuthStore
+import com.example.foodwasteapplication.auth.RegisterResult
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit,
+    onRegisterSuccess: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
     var name by rememberSaveable { mutableStateOf("") }
@@ -56,6 +58,7 @@ fun RegisterScreen(
     var emailError by rememberSaveable { mutableStateOf("") }
     var passwordError by rememberSaveable { mutableStateOf("") }
     var confirmError by rememberSaveable { mutableStateOf("") }
+    var registerError by rememberSaveable { mutableStateOf("") }
 
     val passwordRegex = Regex("^(?=.*[A-Z])(?=.*\\d)(?=.*[!@#\$%^&*()_+\\-=]).{8,}$")
 
@@ -171,6 +174,7 @@ fun RegisterScreen(
                         onValueChange = {
                             name = it
                             nameError = ""
+                            registerError = ""
                         },
                         label = { Text("Name") },
                         modifier = Modifier.fillMaxWidth(),
@@ -188,6 +192,7 @@ fun RegisterScreen(
                         onValueChange = {
                             email = it
                             emailError = ""
+                            registerError = ""
                         },
                         label = { Text("Email") },
                         modifier = Modifier.fillMaxWidth(),
@@ -206,6 +211,7 @@ fun RegisterScreen(
                         onValueChange = {
                             password = it
                             passwordError = ""
+                            registerError = ""
                         },
                         label = { Text("Password") },
                         modifier = Modifier.fillMaxWidth(),
@@ -254,6 +260,7 @@ fun RegisterScreen(
                         onValueChange = {
                             confirmPassword = it
                             confirmError = ""
+                            registerError = ""
                         },
                         label = { Text("Confirm Password") },
                         modifier = Modifier.fillMaxWidth(),
@@ -288,10 +295,27 @@ fun RegisterScreen(
                         }
                     )
 
+                    if (registerError.isNotBlank()) {
+                        Text(
+                            text = registerError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
                     Button(
                         onClick = {
                             if (validate()) {
-                                onRegisterSuccess()
+                                when (val result = MockAuthStore.register(name, email, password)) {
+                                    is RegisterResult.Success -> {
+                                        registerError = ""
+                                        onRegisterSuccess(result.user.email)
+                                    }
+
+                                    is RegisterResult.Failure -> {
+                                        registerError = result.message
+                                    }
+                                }
                             }
                         },
                         modifier = Modifier

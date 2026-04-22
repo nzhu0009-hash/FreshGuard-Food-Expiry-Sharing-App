@@ -30,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -41,9 +42,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.foodwasteapplication.auth.MockAuthStore
 
 @Composable
 fun LoginScreen(
+    prefilledEmail: String = "",
+    loginNotice: String = "",
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
 ) {
@@ -53,6 +57,14 @@ fun LoginScreen(
     var emailError by rememberSaveable { mutableStateOf("") }
     var passwordError by rememberSaveable { mutableStateOf("") }
     var loginError by rememberSaveable { mutableStateOf("") }
+
+    LaunchedEffect(prefilledEmail) {
+        if (prefilledEmail.isNotBlank()) {
+            email = prefilledEmail
+            password = ""
+            loginError = ""
+        }
+    }
 
     fun validate(): Boolean {
         var valid = true
@@ -79,7 +91,7 @@ fun LoginScreen(
 
     fun onLogin() {
         if (!validate()) return
-        if (email == "user@test.com" && password == "Password1!") {
+        if (MockAuthStore.login(email = email, password = password)) {
             loginError = ""
             onLoginSuccess()
         } else {
@@ -141,6 +153,20 @@ fun LoginScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    if (loginNotice.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(18.dp),
+                            color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.85f)
+                        ) {
+                            Text(
+                                text = loginNotice,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
                     }
 
                     Surface(

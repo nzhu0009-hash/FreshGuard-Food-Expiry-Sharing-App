@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.rememberDrawerState
+import com.example.foodwasteapplication.auth.MockAuthStore
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,6 +73,9 @@ fun ProfileScreen(
     onNavigateToRoute: (String) -> Unit,
     onLogoutClick: () -> Unit,
 ) {
+    val currentUser = MockAuthStore.currentUser
+    val displayName = currentUser?.name?.ifBlank { "FreshGuard User" } ?: "FreshGuard User"
+    val displayEmail = currentUser?.email ?: "user@test.com"
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -113,11 +117,11 @@ fun ProfileScreen(
                         FreshGuardAvatar(modifier = Modifier.size(54.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "nina",
+                                text = displayName,
                                 style = MaterialTheme.typography.titleLarge
                             )
                             Text(
-                                text = "Food Waste Hero",
+                                text = displayEmail,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -301,7 +305,7 @@ fun ProfileScreen(
                                 style = MaterialTheme.typography.titleLarge
                             )
                             Text(
-                                text = "nina • Food Waste Hero",
+                                text = "$displayName • FreshGuard member",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.primary
                             )

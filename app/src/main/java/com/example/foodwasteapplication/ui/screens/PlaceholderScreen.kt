@@ -32,12 +32,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.foodwasteapplication.auth.MockAuthStore
 
 @Composable
 fun HomeEntryScreen(
     topPadding: PaddingValues = PaddingValues(),
     onOpenProfile: () -> Unit,
 ) {
+    val currentUser = MockAuthStore.currentUser
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -65,7 +68,11 @@ fun HomeEntryScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Manage your account and move across app sections from here.",
+                        text = if (currentUser != null) {
+                            "Welcome, ${currentUser.name}. This is the app home shell for the team prototype."
+                        } else {
+                            "This is the app home shell for the team prototype."
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -94,12 +101,12 @@ fun HomeEntryScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Profile setup",
+                            text = "Home overview",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Open your profile to edit details, verify contact methods and access the menu drawer.",
+                            text = "Member 1 handles login, register, navigation flow and the user profile entry point. The feature modules will connect into this home screen next.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -107,7 +114,7 @@ fun HomeEntryScreen(
                             onClick = onOpenProfile,
                             modifier = Modifier.padding(start = 0.dp)
                         ) {
-                            Text("Open Profile")
+                            Text("Open My Profile")
                         }
                     }
                 }
@@ -123,13 +130,13 @@ fun HomeEntryScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "What is ready",
+                        text = "Home flow ready",
                         style = MaterialTheme.typography.titleLarge
                     )
-                    ScopeRow("Login and register flow")
-                    ScopeRow("Bottom bar navigation")
-                    ScopeRow("Profile page with drawer menu")
-                    ScopeRow("Screen routing for team integration")
+                    ScopeRow("Users can register a local mock account")
+                    ScopeRow("New account email is returned to Login")
+                    ScopeRow("Bottom bar routes switch between team modules")
+                    ScopeRow("Profile screen is reachable from Home")
                 }
             }
 
@@ -143,13 +150,13 @@ fun HomeEntryScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "Team handoff",
+                        text = "Next module handoff",
                         style = MaterialTheme.typography.titleLarge
                     )
-                    NavigationHintCard("Home", "User entry and profile shortcut")
-                    NavigationHintCard("Add Food", "Member 2 will connect CRUD and Room here")
-                    NavigationHintCard("Share", "Member 4 will connect Firebase sharing here")
-                    NavigationHintCard("Stats", "Member 4 will connect charts and analytics here")
+                    NavigationHintCard("Home", "Landing page, app context and profile entry")
+                    NavigationHintCard("Add Food", "Member 2 will attach CRUD and Room flows here")
+                    NavigationHintCard("Share", "Member 4 will attach food sharing here")
+                    NavigationHintCard("Stats", "Member 4 will attach charts and waste insights here")
                 }
             }
         }
