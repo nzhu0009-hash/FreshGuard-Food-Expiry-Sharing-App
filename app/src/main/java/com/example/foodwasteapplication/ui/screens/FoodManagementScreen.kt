@@ -45,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.foodwasteapplication.food.FoodViewModel
@@ -304,16 +305,30 @@ private fun FoodCard(
     onDeleteFood: () -> Unit,
 ) {
     val daysRemaining = daysUntil(food.expiryDateMillis)
-    val statusText = when (expiryStatusFromDays(daysRemaining)) {
+    val status = expiryStatusFromDays(daysRemaining)
+    val statusText = when (status) {
         FoodExpiryStatus.EXPIRED -> "Expired ${-daysRemaining} day(s) ago"
         FoodExpiryStatus.EXPIRES_TODAY -> "Expires today"
         FoodExpiryStatus.EXPIRING_SOON -> "Expiring soon"
         FoodExpiryStatus.FRESH -> "Fresh"
     }
+    val cardBackground = when (status) {
+        FoodExpiryStatus.EXPIRED -> Color(0xFFFDE7E7)
+        FoodExpiryStatus.EXPIRES_TODAY -> Color(0xFFFFEDD5)
+        FoodExpiryStatus.EXPIRING_SOON -> Color(0xFFFFF6D6)
+        FoodExpiryStatus.FRESH -> Color(0xFFE8F6E8)
+    }
+    val chipBackground = when (status) {
+        FoodExpiryStatus.EXPIRED -> Color(0xFFF7CFCF)
+        FoodExpiryStatus.EXPIRES_TODAY -> Color(0xFFFBD3AB)
+        FoodExpiryStatus.EXPIRING_SOON -> Color(0xFFFBE8A6)
+        FoodExpiryStatus.FRESH -> Color(0xFFCFEBCF)
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBackground)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -332,13 +347,13 @@ private fun FoodCard(
                         style = MaterialTheme.typography.titleLarge
                     )
                     Text(
-                        text = "Quantity: ${food.quantity}, Category: ${food.category}",
+                        text = "Quantity: ${food.quantity}   Category: ${food.category}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "Expiry date: ${formatDate(food.expiryDateMillis)}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -379,7 +394,7 @@ private fun FoodCard(
                     enabled = true,
                     colors = AssistChipDefaults.assistChipColors(
                         labelColor = MaterialTheme.colorScheme.onSurface,
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = chipBackground
                     ),
                     label = {
                         Text(
