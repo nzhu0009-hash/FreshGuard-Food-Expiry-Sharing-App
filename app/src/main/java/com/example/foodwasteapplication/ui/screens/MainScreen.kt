@@ -36,6 +36,7 @@ private enum class BottomDestination(
 }
 
 private const val PROFILE_ROUTE = "profile"
+private const val SHARE_FORM_ROUTE = "share_form"
 
 @Composable
 fun MainScreen(
@@ -115,19 +116,27 @@ fun MainScreen(
                 )
             }
             composable(BottomDestination.SHARE.route) {
-                ModulePlaceholderScreen(
+                FoodSharingScreen(
                     topPadding = innerPadding,
-                    title = "Share",
-                    owner = "Member 4",
-                    description = "Firebase food sharing and community listings will be added here."
+                    onNavigateToShareForm = {
+                        navController.navigate(SHARE_FORM_ROUTE)
+                    }
                 )
             }
             composable(BottomDestination.STATS.route) {
-                ModulePlaceholderScreen(
+                StatisticsScreen(
+                    topPadding = innerPadding
+                )
+            }
+            composable(SHARE_FORM_ROUTE) {
+                ShareFoodFormScreen(
                     topPadding = innerPadding,
-                    title = "Statistics",
-                    owner = "Member 4",
-                    description = "Waste analytics and charts will be implemented in this screen."
+                    onSubmit = {
+                        navController.popBackStack()
+                    },
+                    onCancel = {
+                        navController.popBackStack()
+                    }
                 )
             }
             composable(PROFILE_ROUTE) {
