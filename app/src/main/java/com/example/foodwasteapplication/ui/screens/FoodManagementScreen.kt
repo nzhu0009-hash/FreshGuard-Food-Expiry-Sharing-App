@@ -1,6 +1,7 @@
 package com.example.foodwasteapplication.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -58,6 +60,36 @@ const val FOOD_EDITOR_ARG_ID = "foodId"
 const val NEW_FOOD_ID = -1L
 const val FOOD_EDITOR_ROUTE = "$FOOD_EDITOR_BASE_ROUTE/{$FOOD_EDITOR_ARG_ID}"
 
+private const val ALL_CATEGORIES = "All categories"
+private const val ALL_QUANTITIES = "All quantities"
+private const val ALL_STATUS = "All status"
+
+private enum class ExpiryFilter(
+    val label: String,
+) {
+    ALL(ALL_STATUS),
+    EXPIRED("Expired"),
+    TODAY("Expires today"),
+    SOON("Expiring soon"),
+    FRESH("Fresh"),
+}
+
+private enum class QuantityFilter(
+    val label: String,
+) {
+    ALL(ALL_QUANTITIES),
+    ONE("Quantity = 1"),
+    TWO_TO_THREE("Quantity 2-3"),
+    FOUR_PLUS("Quantity >= 4"),
+}
+
+private enum class FoodExpiryStatus {
+    EXPIRED,
+    EXPIRES_TODAY,
+    EXPIRING_SOON,
+    FRESH,
+}
+
 fun buildFoodEditorRoute(foodId: Long? = null): String {
     return "$FOOD_EDITOR_BASE_ROUTE/${foodId ?: NEW_FOOD_ID}"
 }
@@ -71,6 +103,44 @@ fun FoodListScreen(
     onDeleteFood: (FoodItemEntity) -> Unit,
 ) {
     var pendingDeleteFood by rememberSaveable { mutableStateOf<Long?>(null) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var categoryFilter by rememberSaveable { mutableStateOf(ALL_CATEGORIES) }
+    var expiryFilter by rememberSaveable { mutableStateOf(ExpiryFilter.ALL.label) }
+    var quantityFilter by rememberSaveable { mutableStateOf(QuantityFilter.ALL.label) }
+    val normalizedQuery = searchQuery.trim().lowercase()
+    val categoryOptions = listOf(ALL_CATEGORIES) + foods
+        .map { it.category }
+        .distinct()
+        .sorted()
+
+    val filteredFoods = foods.filter { food ->
+        val displayName = food.name.replace(Regex("\\s*\\(.*?\\)"), "").trim()
+        val matchesSearch = normalizedQuery.isBlank() ||
+            displayName.lowercase().contains(normalizedQuery) ||
+            food.category.lowercase().contains(normalizedQuery) ||
+            food.note.lowercase().contains(normalizedQuery)
+        val matchesCategory = categoryFilter == ALL_CATEGORIES || food.category == categoryFilter
+
+        val matchesQuantity = when (quantityFilter) {
+            QuantityFilter.ALL.label -> true
+            QuantityFilter.ONE.label -> food.quantity == 1
+            QuantityFilter.TWO_TO_THREE.label -> food.quantity in 2..3
+            QuantityFilter.FOUR_PLUS.label -> food.quantity >= 4
+            else -> true
+        }
+
+        val status = expiryStatusFromDays(daysUntil(food.expiryDateMillis))
+        val matchesStatus = when (expiryFilter) {
+            ExpiryFilter.ALL.label -> true
+            ExpiryFilter.EXPIRED.label -> status == FoodExpiryStatus.EXPIRED
+            ExpiryFilter.TODAY.label -> status == FoodExpiryStatus.EXPIRES_TODAY
+            ExpiryFilter.SOON.label -> status == FoodExpiryStatus.EXPIRING_SOON
+            ExpiryFilter.FRESH.label -> status == FoodExpiryStatus.FRESH
+            else -> true
+        }
+
+        matchesSearch && matchesCategory && matchesQuantity && matchesStatus
+    }
     val foodToDelete = foods.firstOrNull { it.id == pendingDeleteFood }
 
     if (foodToDelete != null) {
@@ -92,7 +162,7 @@ fun FoodListScreen(
                         pendingDeleteFood = null
                     }
                 ) {
-                    Text("Confirm")
+                    Text("Delete")
                 }
             }
         )
@@ -135,6 +205,48 @@ fun FoodListScreen(
             }
         }
 
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Search food") },
+            singleLine = true
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            FilterDropdown(
+                modifier = Modifier.weight(1f),
+                label = "Quantity",
+                selectedValue = quantityFilter,
+                options = QuantityFilter.entries.map { it.label },
+                onOptionSelected = { quantityFilter = it }
+            )
+            FilterDropdown(
+                modifier = Modifier.weight(1f),
+                label = "Category",
+                selectedValue = categoryFilter,
+                options = categoryOptions,
+                onOptionSelected = { categoryFilter = it }
+            )
+        }
+
+        FilterDropdown(
+            modifier = Modifier.fillMaxWidth(),
+            label = "Expiry status",
+            selectedValue = expiryFilter,
+            options = ExpiryFilter.entries.map { it.label },
+            onOptionSelected = { expiryFilter = it }
+        )
+
+        Text(
+            text = "Total items: ${foods.size} | Showing: ${filteredFoods.size}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
         if (foods.isEmpty()) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -151,12 +263,28 @@ fun FoodListScreen(
             return
         }
 
+        if (filteredFoods.isEmpty()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.secondaryContainer
+            ) {
+                Text(
+                    text = "No matching food found. Try a different keyword.",
+                    modifier = Modifier.padding(18.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+            return
+        }
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(
-                items = foods,
+                items = filteredFoods,
                 key = { it.id }
             ) { food ->
                 FoodCard(
@@ -176,11 +304,11 @@ private fun FoodCard(
     onDeleteFood: () -> Unit,
 ) {
     val daysRemaining = daysUntil(food.expiryDateMillis)
-    val statusText = when {
-        daysRemaining < 0 -> "Expired ${-daysRemaining} day(s) ago"
-        daysRemaining == 0 -> "Expires today"
-        daysRemaining <= 2 -> "Expiring soon"
-        else -> "Fresh"
+    val statusText = when (expiryStatusFromDays(daysRemaining)) {
+        FoodExpiryStatus.EXPIRED -> "Expired ${-daysRemaining} day(s) ago"
+        FoodExpiryStatus.EXPIRES_TODAY -> "Expires today"
+        FoodExpiryStatus.EXPIRING_SOON -> "Expiring soon"
+        FoodExpiryStatus.FRESH -> "Fresh"
     }
 
     Card(
@@ -214,16 +342,30 @@ private fun FoodCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                IconButton(onClick = onEditFood) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit"
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(onClick = onEditFood) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit"
+                        )
+                    }
+                    Text(
+                        text = "Edit",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                IconButton(onClick = onDeleteFood) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete"
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(onClick = onDeleteFood) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete"
+                        )
+                    }
+                    Text(
+                        text = "Delete",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -253,6 +395,51 @@ private fun FoodCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterDropdown(
+    modifier: Modifier = Modifier,
+    label: String,
+    selectedValue: String,
+    options: List<String>,
+    onOptionSelected: (String) -> Unit,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = selectedValue,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = {
+                TextButton(onClick = { expanded = true }) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Pick")
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowDown,
+                            contentDescription = "Open options"
+                        )
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    }
+                )
             }
         }
     }
@@ -362,7 +549,17 @@ fun FoodEditorScreen(
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Category") },
-                trailingIcon = { TextButton(onClick = { categoryExpanded = true }) { Text("Pick") } },
+                trailingIcon = {
+                    TextButton(onClick = { categoryExpanded = true }) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Pick")
+                            Icon(
+                                imageVector = Icons.Filled.KeyboardArrowDown,
+                                contentDescription = "Open options"
+                            )
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
             )
@@ -462,6 +659,15 @@ private fun daysUntil(expiryDateMillis: Long): Int {
     val today = startOfToday()
     val normalizedExpiry = normalizeDate(expiryDateMillis)
     return TimeUnit.MILLISECONDS.toDays(normalizedExpiry - today).toInt()
+}
+
+private fun expiryStatusFromDays(daysRemaining: Int): FoodExpiryStatus {
+    return when {
+        daysRemaining < 0 -> FoodExpiryStatus.EXPIRED
+        daysRemaining == 0 -> FoodExpiryStatus.EXPIRES_TODAY
+        daysRemaining <= 2 -> FoodExpiryStatus.EXPIRING_SOON
+        else -> FoodExpiryStatus.FRESH
+    }
 }
 
 private fun defaultExpiryDate(): Long {

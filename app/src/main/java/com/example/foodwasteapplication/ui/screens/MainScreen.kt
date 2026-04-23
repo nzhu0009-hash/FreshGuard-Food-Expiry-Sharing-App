@@ -30,7 +30,7 @@ private enum class BottomDestination(
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
 ) {
     HOME("home", "Home", Icons.Filled.Home),
-    ADD_FOOD("add_food", "Add Food", Icons.Filled.AddCircle),
+    ADD_FOOD("add_food", "Food List", Icons.Filled.AddCircle),
     SHARE("share", "Share", Icons.Filled.Share),
     STATS("stats", "Stats", Icons.Filled.BarChart),
 }
