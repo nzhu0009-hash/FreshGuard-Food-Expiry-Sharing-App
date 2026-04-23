@@ -123,7 +123,7 @@ fun LoginScreen(
         ) {
             AuthIllustration(
                 title = "FreshGuard",
-                subtitle = "Track expiry earlier, waste less, and support SDG 2.",
+                subtitle = "Track expiry earlier, waste less, and support SDG 2 goals.",
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = 520.dp)

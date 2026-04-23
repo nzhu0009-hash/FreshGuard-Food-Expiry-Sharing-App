@@ -32,7 +32,7 @@ private enum class BottomDestination(
     HOME("home", "Home", Icons.Filled.Home),
     ADD_FOOD("add_food", "Food List", Icons.Filled.AddCircle),
     SHARE("share", "Share", Icons.Filled.Share),
-    STATS("stats", "Stats", Icons.Filled.BarChart),
+    STATS("stats", "Statistics", Icons.Filled.BarChart),
 }
 
 private const val PROFILE_ROUTE = "profile"
@@ -87,6 +87,15 @@ fun MainScreen(
                     topPadding = innerPadding,
                     onOpenProfile = {
                         navController.navigate(PROFILE_ROUTE)
+                    },
+                    onNavigateToRoute = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }
@@ -116,7 +125,7 @@ fun MainScreen(
             composable(BottomDestination.STATS.route) {
                 ModulePlaceholderScreen(
                     topPadding = innerPadding,
-                    title = "Stats",
+                    title = "Statistics",
                     owner = "Member 4",
                     description = "Waste analytics and charts will be implemented in this screen."
                 )

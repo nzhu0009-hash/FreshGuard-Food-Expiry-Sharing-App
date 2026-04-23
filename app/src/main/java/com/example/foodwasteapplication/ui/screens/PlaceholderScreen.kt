@@ -19,10 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,8 +38,15 @@ import com.example.foodwasteapplication.auth.MockAuthStore
 fun HomeEntryScreen(
     topPadding: PaddingValues = PaddingValues(),
     onOpenProfile: () -> Unit,
+    onNavigateToRoute: (String) -> Unit,
 ) {
     val currentUser = MockAuthStore.currentUser
+    val isDemoAccount = currentUser?.email.equals("user@test.com", ignoreCase = true)
+    val welcomeText = if (currentUser != null && !isDemoAccount && currentUser.name.isNotBlank()) {
+        "Welcome, ${currentUser.name}. Track expiry, share food, and view waste insights."
+    } else {
+        "Welcome. Track expiry, share food, and view waste insights."
+    }
 
     Box(
         modifier = Modifier
@@ -51,8 +58,8 @@ fun HomeEntryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -68,17 +75,10 @@ fun HomeEntryScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = if (currentUser != null) {
-                            "Welcome, ${currentUser.name}. This is the app home shell for the team prototype."
-                        } else {
-                            "This is the app home shell for the team prototype."
-                        },
+                        text = welcomeText,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-                TextButton(onClick = onOpenProfile) {
-                    Text("My Profile")
                 }
             }
 
@@ -89,16 +89,16 @@ fun HomeEntryScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     FreshGuardAvatar(
-                        modifier = Modifier.size(78.dp)
+                        modifier = Modifier.size(64.dp)
                     )
                     Column(
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
                             text = "Home overview",
@@ -106,17 +106,51 @@ fun HomeEntryScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Member 1 handles login, register, navigation flow and the user profile entry point. The feature modules will connect into this home screen next.",
+                            text = "Manage food expiry, sharing, reminders, and statistics from one connected app flow.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        TextButton(
+                        Button(
                             onClick = onOpenProfile,
                             modifier = Modifier.padding(start = 0.dp)
                         ) {
                             Text("Open My Profile")
                         }
                     }
+                }
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Next module handoff",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    NavigationActionCard(
+                        title = "Food List",
+                        subtitle = "Manage food inventory with search, filters and CRUD features.",
+                        buttonLabel = "Open Food List",
+                        onClick = { onNavigateToRoute("add_food") }
+                    )
+                    NavigationActionCard(
+                        title = "Share",
+                        subtitle = "Navigate to the sharing module for community food exchange.",
+                        buttonLabel = "Open Share",
+                        onClick = { onNavigateToRoute("share") }
+                    )
+                    NavigationActionCard(
+                        title = "Statistics",
+                        subtitle = "Open analytics and waste insights screens for visual summaries.",
+                        buttonLabel = "Open Statistics",
+                        onClick = { onNavigateToRoute("stats") }
+                    )
                 }
             }
 
@@ -137,26 +171,6 @@ fun HomeEntryScreen(
                     ScopeRow("New account email is returned to Login")
                     ScopeRow("Bottom bar routes switch between team modules")
                     ScopeRow("Profile screen is reachable from Home")
-                }
-            }
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Text(
-                        text = "Next module handoff",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    NavigationHintCard("Home", "Landing page, app context and profile entry")
-                    NavigationHintCard("Add Food", "Member 2 will attach CRUD and Room flows here")
-                    NavigationHintCard("Share", "Member 4 will attach food sharing here")
-                    NavigationHintCard("Stats", "Member 4 will attach charts and waste insights here")
                 }
             }
         }
@@ -229,17 +243,19 @@ private fun ScopeRow(text: String) {
 }
 
 @Composable
-private fun NavigationHintCard(
+private fun NavigationActionCard(
     title: String,
     subtitle: String,
+    buttonLabel: String,
+    onClick: () -> Unit,
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = title,
@@ -248,9 +264,12 @@ private fun NavigationHintCard(
             )
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Button(onClick = onClick) {
+                Text(buttonLabel)
+            }
         }
     }
 }
