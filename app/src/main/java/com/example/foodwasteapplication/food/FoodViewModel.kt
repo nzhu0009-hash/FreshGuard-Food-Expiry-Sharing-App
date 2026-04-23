@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.example.foodwasteapplication.reminder.ReminderScheduler
 
 class FoodViewModel(
     application: Application,
@@ -51,8 +52,12 @@ class FoodViewModel(
         viewModelScope.launch {
             if (isEditing) {
                 repository.updateFood(food)
+                ReminderScheduler.cancelReminder(getApplication(), food.id)
+                ReminderScheduler.scheduleReminder(getApplication(), food)
             } else {
-                repository.insertFood(food.copy(id = 0))
+                val newId = repository.insertFood(food.copy(id = 0))
+                val newFood = food.copy(id = newId)
+                ReminderScheduler.scheduleReminder(getApplication(), newFood)
             }
         }
     }
@@ -60,6 +65,7 @@ class FoodViewModel(
     fun deleteFood(food: FoodItemEntity) {
         viewModelScope.launch {
             repository.deleteFood(food)
+            ReminderScheduler.cancelReminder(getApplication(), food.id)
         }
     }
 
