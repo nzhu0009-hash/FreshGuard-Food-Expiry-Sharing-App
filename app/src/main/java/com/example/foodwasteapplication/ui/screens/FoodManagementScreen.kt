@@ -55,6 +55,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import com.example.foodwasteapplication.reminder.ExpiryChecker
 
 const val FOOD_EDITOR_BASE_ROUTE = "food_editor"
 const val FOOD_EDITOR_ARG_ID = "foodId"
@@ -247,6 +248,55 @@ fun FoodListScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        val expiredFoods = ExpiryChecker.getExpiredFoods(foods)
+        val expiringFoods = ExpiryChecker.getExpiringFoods(foods)
+
+        if (expiredFoods.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("❌")
+                    Text(
+                        text = "${expiredFoods.size} item(s) already expired: " +
+                                expiredFoods.joinToString(", ") { it.name },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+
+        if (expiringFoods.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFFF3CD)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("⚠️")
+                    Text(
+                        text = "${expiringFoods.size} item(s) expiring within 2 days: " +
+                                expiringFoods.joinToString(", ") { it.name },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF856404)
+                    )
+                }
+            }
+        }
 
         if (foods.isEmpty()) {
             Surface(
