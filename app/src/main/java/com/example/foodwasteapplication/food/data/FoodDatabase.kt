@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [FoodItemEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class FoodDatabase : RoomDatabase() {
@@ -23,11 +23,12 @@ abstract class FoodDatabase : RoomDatabase() {
                     context.applicationContext,
                     FoodDatabase::class.java,
                     "freshguard_food.db"
-                ).build().also { created ->
+                )
+                    .fallbackToDestructiveMigration(dropAllTables = true)
+                    .build().also { created ->
                     instance = created
                 }
             }
         }
     }
 }
-

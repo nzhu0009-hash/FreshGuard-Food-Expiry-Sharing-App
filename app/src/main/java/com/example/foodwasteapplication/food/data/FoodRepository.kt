@@ -5,12 +5,12 @@ import kotlinx.coroutines.flow.Flow
 class FoodRepository(
     private val dao: FoodDao,
 ) {
-    fun observeFoods(): Flow<List<FoodItemEntity>> = dao.observeAllFoods()
-    fun observeFoodCount(): Flow<Int> = dao.observeFoodCount()
+    fun observeFoods(ownerEmail: String): Flow<List<FoodItemEntity>> = dao.observeAllFoods(ownerEmail)
+    fun observeFoodCount(ownerEmail: String): Flow<Int> = dao.observeFoodCount(ownerEmail)
 
-    suspend fun getFoodById(id: Long): FoodItemEntity? = dao.getFoodById(id)
-    suspend fun getFoodsByExpiryRange(fromDate: Long, toDate: Long): List<FoodItemEntity> {
-        return dao.getFoodsByExpiryRange(fromDate, toDate)
+    suspend fun getFoodById(id: Long, ownerEmail: String): FoodItemEntity? = dao.getFoodById(id, ownerEmail)
+    suspend fun getFoodsByExpiryRange(ownerEmail: String, fromDate: Long, toDate: Long): List<FoodItemEntity> {
+        return dao.getFoodsByExpiryRange(ownerEmail, fromDate, toDate)
     }
 
     suspend fun insertFood(food: FoodItemEntity): Long = dao.insertFood(food)
@@ -18,6 +18,8 @@ class FoodRepository(
     suspend fun updateFood(food: FoodItemEntity) = dao.updateFood(food)
 
     suspend fun deleteFood(food: FoodItemEntity) = dao.deleteFood(food)
+
+    suspend fun getFoodCount(ownerEmail: String): Int = dao.getFoodCount(ownerEmail)
 
     suspend fun seedFoods(seedFoods: List<FoodItemEntity>) {
         seedFoods.forEach { food ->

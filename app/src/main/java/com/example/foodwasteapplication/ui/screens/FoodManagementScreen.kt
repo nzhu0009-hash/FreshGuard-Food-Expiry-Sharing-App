@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
@@ -46,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.foodwasteapplication.food.FoodViewModel
@@ -174,8 +177,8 @@ fun FoodListScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(topPadding)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -183,7 +186,7 @@ fun FoodListScreen(
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
                     text = "Food List",
@@ -191,8 +194,10 @@ fun FoodListScreen(
                 )
                 Text(
                     text = "Add, edit and manage food items before they expire.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Button(onClick = onAddFood) {
@@ -210,14 +215,17 @@ fun FoodListScreen(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Search food") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            label = { Text("Search food", style = MaterialTheme.typography.labelSmall) },
+            textStyle = MaterialTheme.typography.bodySmall,
             singleLine = true
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilterDropdown(
                 modifier = Modifier.weight(1f),
@@ -245,7 +253,7 @@ fun FoodListScreen(
 
         Text(
             text = "Total items: ${foods.size} | Showing: ${filteredFoods.size}",
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
@@ -260,7 +268,7 @@ fun FoodListScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -268,7 +276,7 @@ fun FoodListScreen(
                     Text(
                         text = "${expiredFoods.size} item(s) already expired: " +
                                 expiredFoods.joinToString(", ") { it.name },
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                 }
@@ -283,7 +291,7 @@ fun FoodListScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -291,7 +299,7 @@ fun FoodListScreen(
                     Text(
                         text = "${expiringFoods.size} item(s) expiring within 2 days: " +
                                 expiringFoods.joinToString(", ") { it.name },
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF856404)
                     )
                 }
@@ -479,19 +487,30 @@ private fun FilterDropdown(
             value = selectedValue,
             onValueChange = {},
             readOnly = true,
-            label = { Text(label) },
+            label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+            textStyle = MaterialTheme.typography.bodySmall,
+            singleLine = true,
             trailingIcon = {
-                TextButton(onClick = { expanded = true }) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Pick")
-                        Icon(
-                            imageVector = Icons.Filled.KeyboardArrowDown,
-                            contentDescription = "Open options"
-                        )
-                    }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .padding(end = 6.dp)
+                        .clickable { expanded = true }
+                ) {
+                    Text(
+                        text = "Pick",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.KeyboardArrowDown,
+                        contentDescription = "Open options",
+                        modifier = Modifier.size(14.dp)
+                    )
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
         )
         DropdownMenu(
             expanded = expanded,
@@ -613,20 +632,30 @@ fun FoodEditorScreen(
                 value = category,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Category") },
+                label = { Text("Category", style = MaterialTheme.typography.labelSmall) },
+                textStyle = MaterialTheme.typography.bodySmall,
+                singleLine = true,
                 trailingIcon = {
-                    TextButton(onClick = { categoryExpanded = true }) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Pick")
-                            Icon(
-                                imageVector = Icons.Filled.KeyboardArrowDown,
-                                contentDescription = "Open options"
-                            )
-                        }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .clickable { categoryExpanded = true }
+                    ) {
+                        Text(
+                            text = "Pick",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowDown,
+                            contentDescription = "Open options",
+                            modifier = Modifier.size(14.dp)
+                        )
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(56.dp)
             )
             DropdownMenu(
                 expanded = categoryExpanded,

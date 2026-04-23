@@ -9,17 +9,23 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FoodDao {
-    @Query("SELECT * FROM food_items ORDER BY expiryDateMillis ASC, name COLLATE NOCASE ASC")
-    fun observeAllFoods(): Flow<List<FoodItemEntity>>
+    @Query("SELECT * FROM food_items WHERE ownerEmail = :ownerEmail ORDER BY expiryDateMillis ASC, name COLLATE NOCASE ASC")
+    fun observeAllFoods(ownerEmail: String): Flow<List<FoodItemEntity>>
 
-    @Query("SELECT * FROM food_items WHERE id = :id LIMIT 1")
-    suspend fun getFoodById(id: Long): FoodItemEntity?
+    @Query("SELECT * FROM food_items WHERE id = :id AND ownerEmail = :ownerEmail LIMIT 1")
+    suspend fun getFoodById(id: Long, ownerEmail: String): FoodItemEntity?
+
+    @Query("SELECT * FROM food_items WHERE ownerEmail = :ownerEmail AND expiryDateMillis BETWEEN :fromDate AND :toDate ORDER BY expiryDateMillis ASC")
+    suspend fun getFoodsByExpiryRange(ownerEmail: String, fromDate: Long, toDate: Long): List<FoodItemEntity>
 
     @Query("SELECT * FROM food_items WHERE expiryDateMillis BETWEEN :fromDate AND :toDate ORDER BY expiryDateMillis ASC")
-    suspend fun getFoodsByExpiryRange(fromDate: Long, toDate: Long): List<FoodItemEntity>
+    suspend fun getFoodsByExpiryRangeAll(fromDate: Long, toDate: Long): List<FoodItemEntity>
 
-    @Query("SELECT COUNT(*) FROM food_items")
-    fun observeFoodCount(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM food_items WHERE ownerEmail = :ownerEmail")
+    fun observeFoodCount(ownerEmail: String): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM food_items WHERE ownerEmail = :ownerEmail")
+    suspend fun getFoodCount(ownerEmail: String): Int
 
     @Insert
     suspend fun insertFood(food: FoodItemEntity): Long

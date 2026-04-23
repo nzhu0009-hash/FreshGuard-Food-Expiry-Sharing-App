@@ -13,7 +13,7 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             CoroutineScope(Dispatchers.IO).launch {
                 val foods = FoodDatabase.getInstance(context).foodDao()
-                    .getFoodsByExpiryRange(0L, Long.MAX_VALUE)
+                    .getFoodsByExpiryRangeAll(0L, Long.MAX_VALUE)
                 ReminderScheduler.scheduleAllReminders(context, foods)
             }
         }

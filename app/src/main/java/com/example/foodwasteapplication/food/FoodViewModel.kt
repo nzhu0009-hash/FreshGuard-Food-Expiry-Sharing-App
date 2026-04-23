@@ -1,9 +1,9 @@
 package com.example.foodwasteapplication.food
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodwasteapplication.auth.MockAuthStore
 import com.example.foodwasteapplication.food.data.DemoFoodSeedData
 import com.example.foodwasteapplication.food.data.FoodDatabase
 import com.example.foodwasteapplication.food.data.FoodItemEntity
@@ -20,10 +20,15 @@ class FoodViewModel(
     private val repository = FoodRepository(
         FoodDatabase.getInstance(application).foodDao()
     )
-    private val preferences = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val activeUserEmail = MockAuthStore.currentUser
+        ?.email
+        ?.trim()
+        ?.lowercase()
+        .orEmpty()
+    private val isDemoAccount = activeUserEmail == DEMO_EMAIL
 
     val foods: StateFlow<List<FoodItemEntity>> = repository
-        .observeFoods()
+        .observeFoods(activeUserEmail)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -31,7 +36,7 @@ class FoodViewModel(
         )
 
     val totalFoodCount: StateFlow<Int> = repository
-        .observeFoodCount()
+        .observeFoodCount(activeUserEmail)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -42,21 +47,22 @@ class FoodViewModel(
         seedDemoFoodsOnce()
     }
 
-    suspend fun findFood(id: Long): FoodItemEntity? = repository.getFoodById(id)
+    suspend fun findFood(id: Long): FoodItemEntity? = repository.getFoodById(id, activeUserEmail)
 
     suspend fun getFoodsExpiringBetween(fromDate: Long, toDate: Long): List<FoodItemEntity> {
-        return repository.getFoodsByExpiryRange(fromDate, toDate)
+        return repository.getFoodsByExpiryRange(activeUserEmail, fromDate, toDate)
     }
 
     fun saveFood(food: FoodItemEntity, isEditing: Boolean) {
         viewModelScope.launch {
+            val scopedFood = food.copy(ownerEmail = activeUserEmail)
             if (isEditing) {
-                repository.updateFood(food)
-                ReminderScheduler.cancelReminder(getApplication(), food.id)
-                ReminderScheduler.scheduleReminder(getApplication(), food)
+                repository.updateFood(scopedFood)
+                ReminderScheduler.cancelReminder(getApplication(), scopedFood.id)
+                ReminderScheduler.scheduleReminder(getApplication(), scopedFood)
             } else {
-                val newId = repository.insertFood(food.copy(id = 0))
-                val newFood = food.copy(id = newId)
+                val newId = repository.insertFood(scopedFood.copy(id = 0))
+                val newFood = scopedFood.copy(id = newId)
                 ReminderScheduler.scheduleReminder(getApplication(), newFood)
             }
         }
@@ -70,17 +76,18 @@ class FoodViewModel(
     }
 
     private fun seedDemoFoodsOnce() {
-        val alreadySeeded = preferences.getBoolean(KEY_DEMO_SEEDED, false)
-        if (alreadySeeded) return
+        if (!isDemoAccount) return
 
         viewModelScope.launch {
-            repository.seedFoods(DemoFoodSeedData.foods)
-            preferences.edit().putBoolean(KEY_DEMO_SEEDED, true).apply()
+            val currentCount = repository.getFoodCount(activeUserEmail)
+            if (currentCount > 0) return@launch
+            repository.seedFoods(
+                DemoFoodSeedData.foods.map { it.copy(ownerEmail = activeUserEmail) }
+            )
         }
     }
 
     companion object {
-        private const val PREFS_NAME = "freshguard_prefs"
-        private const val KEY_DEMO_SEEDED = "demo_food_seeded_v1"
+        private const val DEMO_EMAIL = "user@test.com"
     }
 }
